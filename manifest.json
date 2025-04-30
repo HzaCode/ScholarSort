@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Scholar Profile Assistant",
+  "version": "1.0",
+  "description": "Enhance your Google Scholar experience! ",
+
+  "content_scripts": [
+    {
+      "matches": [
+        "*://scholar.google.com/citations?*",
+        "*://scholar.google.co.uk/citations?*",
+        "*://scholar.google.de/citations?*",
+        "*://scholar.google.fr/citations?*",
+        "*://scholar.google.ca/citations?*",
+        "*://scholar.google.com.au/citations?*",
+        "*://scholar.google.nl/citations?*",
+        "*://scholar.google.es/citations?*",
+        "*://scholar.google.it/citations?*",
+        "*://scholar.google.co.jp/citations?*",
+        "*://scholar.google.com.br/citations?*",
+        "*://scholar.google.co.in/citations?*",
+        "*://scholar.google.ch/citations?*",
+        "*://scholar.google.at/citations?*",
+        "*://scholar.google.se/citations?*",
+        "*://scholar.google.dk/citations?*",
+        "*://scholar.google.no/citations?*",
+        "*://scholar.google.fi/citations?*",
+        "*://scholar.google.be/citations?*",
+        "*://scholar.google.pl/citations?*",
+        "*://scholar.google.pt/citations?*",
+        "*://scholar.google.com.hk/citations?*",
+        "*://scholar.google.com.sg/citations?*",
+        "*://scholar.google.co.kr/citations?*",
+        "*://scholar.google.co.il/citations?*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
