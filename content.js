@@ -6,7 +6,12 @@ let excludePreprintsActive = false;
 let ownerInfoCache = null; // Cache for profile owner's parsed name
 
 // Keywords to identify preprints in the source string (e.g., "arXiv preprint arXiv:...")
-const PREPRINT_KEYWORDS = ['arxiv', 'biorxiv', 'medrxiv', 'preprint'];
+const PREPRINT_KEYWORDS = [
+    'arxiv', 'biorxiv', 'medrxiv', 'preprint', 'chemrxiv', 
+    'research square', 'ssrn', 'preprints.org', 'africarxiv', 
+    'psyarxiv', 'socarxiv', 'engrxiv', 'osf preprints', 
+    'jmir preprints', 'peerj preprints'
+];
 
 // --- Robust Parsing Functions ---
 
@@ -174,53 +179,86 @@ function isLastAuthorMatch(ownerInfo, lastAuthorInfo) {
 // --- Helper Functions ---
 /**
  * Parses authors from a publication row (.gsc_a_tr).
- * Returns { firstAuthorInfo, lastAuthorInfo, count, sourceText }
+ * Returns { firstAuthorInfo, lastAuthorInfo, count, sourceText, truncated }
+ * Updated to correctly find source text on profile pages.
  */
 function getParsedAuthors(row) {
-    const authorDiv = row.querySelector('.gs_gray'); // Selector for the line containing authors/journal
-    if (!authorDiv) {
-        console.warn("Scholar Highlighter: Could not find author div (.gs_gray) in row:", row);
+    // Find the container cell for title, authors, source
+    const titleCell = row.querySelector('.gsc_a_t');
+    if (!titleCell) {
+        console.warn("Scholar Highlighter: Could not find title cell (.gsc_a_t) in row:", row);
         return null;
     }
-    // The author list is usually the first line within gs_gray, sometimes followed by journal/year
-    // Split by newline or look for specific patterns if needed, but often innerText works if authors are first.
-    // Let's assume the first line break separates authors from journal/year info
-    const parts = authorDiv.innerText.split('\n');
-    let authorString = parts[0].trim(); // Take the first line
 
-    if (!authorString) {
-         console.warn("Scholar Highlighter: Found author div (.gs_gray) but its first line is empty:", authorDiv.innerText);
-         return null;
+    // Get ALL .gs_gray divs within the title cell
+    const authorAndSourceDivs = titleCell.querySelectorAll('.gs_gray');
+
+    let authorDiv = null;
+    let sourceDiv = null;
+
+    if (authorAndSourceDivs.length >= 2) {
+        // Standard case: First is authors, second is source
+        authorDiv = authorAndSourceDivs[0];
+        sourceDiv = authorAndSourceDivs[1];
+    } else if (authorAndSourceDivs.length === 1) {
+        // Edge case or potentially broken structure? Assume the single div is authors.
+        console.warn("Scholar Highlighter: Found only one .gs_gray div in row, assuming authors, source unavailable:", row);
+        authorDiv = authorAndSourceDivs[0];
+        // sourceDiv remains null
+    } else {
+        // No .gs_gray divs found at all
+        console.warn("Scholar Highlighter: Could not find any author/source divs (.gs_gray) in row:", row);
+        return null;
     }
 
-    // Handle the "..." ellipsis indicating a truncated author list
-    let fullListAvailable = !authorString.endsWith('...');
-    if (!fullListAvailable) {
-        // Remove "..." and potentially the partial name before it
-        authorString = authorString.substring(0, authorString.lastIndexOf(',')); // Remove up to the last comma
-        // If no comma, just remove "..."? Risky. Let's stick with comma removal.
-         if (!authorString) {
-             console.warn("Scholar Highlighter: Could not process truncated author string:", parts[0]);
-             return null; // Cannot reliably determine last author
-         }
-    }
+    // --- Process Authors --- (Use authorDiv if available)
+    let firstAuthorInfo = null;
+    let lastAuthorInfo = null;
+    let authorsRaw = [];
+    let fullListAvailable = true; // Assume true unless '...' is found
 
-    const authorsRaw = authorString.split(',').map(name => name.trim()).filter(name => name.length > 0);
+    if (authorDiv) {
+        let authorString = authorDiv.innerText.split('\n')[0].trim(); // Take first line if multiple
+
+        if (authorString) {
+            fullListAvailable = !authorString.endsWith('...');
+            if (!fullListAvailable) {
+                // Handle truncation: remove '...' and potentially partial name before it
+                const lastCommaIndex = authorString.lastIndexOf(',');
+                if (lastCommaIndex !== -1) {
+                    authorString = authorString.substring(0, lastCommaIndex);
+                } else {
+                    // If no comma before '...', cannot reliably parse, clear the string?
+                    console.warn("Scholar Highlighter: Cannot reliably parse truncated author string without comma:", authorDiv.innerText);
+                    authorString = ''; // Effectively discard truncated authors
+                }
+            }
+
+            if (authorString) {
+                 authorsRaw = authorString.split(',').map(name => name.trim()).filter(name => name.length > 0);
+                 if (authorsRaw.length > 0) {
+                    firstAuthorInfo = parseAuthorListName(authorsRaw[0]);
+                    // Only get last author if more than one AND list wasn't truncated
+                    lastAuthorInfo = (authorsRaw.length > 1 && fullListAvailable) ? parseAuthorListName(authorsRaw[authorsRaw.length - 1]) : null;
+                 }
+            }
+        }
+    }
     if (authorsRaw.length === 0) {
-        console.warn("Scholar Highlighter: No valid author names found after splitting:", authorString);
-        return null;
+         console.warn("Scholar Highlighter: No valid author names could be parsed from row:", row);
+         // Proceed anyway, might still need sourceText for preprint check
     }
 
-    const firstAuthorInfo = parseAuthorListName(authorsRaw[0]);
-    // Only get last author if there's more than one AND the list wasn't truncated (or we handled truncation)
-    const lastAuthorInfo = (authorsRaw.length > 1 && fullListAvailable) ? parseAuthorListName(authorsRaw[authorsRaw.length - 1]) : null;
-    // If list was truncated, we cannot be sure about the *actual* last author. Set lastAuthorInfo to null.
-    // Our previous logic already handled this via fullListAvailable check.
+    // --- Process Source Text --- (Use sourceDiv if available)
+    let sourceText = '';
+    if (sourceDiv) {
+        sourceText = sourceDiv.innerText.toLowerCase(); // Use second div's text for source check
+    } else {
+         console.warn("Scholar Highlighter: Source div (.gs_gray[1]) not found, preprint check may fail for row:", row);
+    }
 
-    const sourceText = authorDiv.innerText.toLowerCase(); // Use full text for preprint keyword check
-
-    // Log parsing results for a specific row if needed for debugging
-    // console.log(`Parsed Authors for row: First=${JSON.stringify(firstAuthorInfo)}, Last=${JSON.stringify(lastAuthorInfo)}, Count=${authorsRaw.length}, Truncated=${!fullListAvailable}`);
+    // Log parsing results if needed
+    // console.log(`Parsed Row: First=${JSON.stringify(firstAuthorInfo)}, Last=${JSON.stringify(lastAuthorInfo)}, Count=${authorsRaw.length}, Truncated=${!fullListAvailable}, Source='${sourceText}'`);
 
     return { firstAuthorInfo, lastAuthorInfo, count: authorsRaw.length, sourceText, truncated: !fullListAvailable };
 }
@@ -252,22 +290,64 @@ function resetView() {
 
 function applyPreprintFilter() {
     console.log(`Scholar Highlighter: Applying preprint visibility (Exclude: ${excludePreprintsActive}).`);
-    const publicationRows = document.querySelectorAll('#gsc_a_b .gsc_a_tr');
     let hiddenCount = 0;
     let processedCount = 0;
-    publicationRows.forEach(row => {
-        processedCount++;
-        const authors = getParsedAuthors(row);
-        const shouldHide = excludePreprintsActive && isPreprint(authors);
 
-        // Apply display style based ONLY on preprint status
-        row.style.display = shouldHide ? 'none' : '';
+    // Check if we are on a profile page (presence of #gsc_a_b)
+    const profileTableBody = document.getElementById('gsc_a_b');
+    if (profileTableBody) {
+        console.log("Scholar Highlighter: Detected Profile Page structure for preprint filter.");
+        const publicationRows = profileTableBody.querySelectorAll('.gsc_a_tr');
+        publicationRows.forEach(row => {
+            processedCount++;
+            const authors = getParsedAuthors(row); // Uses .gs_gray internally
+            const shouldHide = excludePreprintsActive && isPreprint(authors); // isPreprint uses sourceText from getParsedAuthors
 
-        if (shouldHide) {
-            hiddenCount++;
-        }
-    });
-    console.log(`Scholar Highlighter: Preprint filter processed ${processedCount} rows, set ${hiddenCount} to hidden.`);
+            // Apply display style based ONLY on preprint status
+            row.style.display = shouldHide ? 'none' : '';
+
+            if (shouldHide) {
+                hiddenCount++;
+                // Optional: Log hidden title on profile page
+                // const titleElement = row.querySelector('.gsc_a_at a');
+                // if (titleElement) console.log(`  - Hiding preprint (profile): ${titleElement.innerText}`);
+            }
+        });
+    } else {
+        // Assume search results page structure
+        console.log("Scholar Highlighter: Detected Search Results Page structure for preprint filter.");
+        const searchResults = document.querySelectorAll('.gs_r.gs_scl');
+        searchResults.forEach(result => {
+            processedCount++;
+            const authorsLine = result.querySelector('.gs_a'); // Get the author/source line element
+            let sourceText = '';
+            if (authorsLine) {
+                sourceText = authorsLine.textContent.toLowerCase(); // Use textContent for search results source
+            } else {
+                console.warn("Scholar Highlighter: Could not find .gs_a element in a search result item:", result);
+            }
+
+            let isPubPreprint = false;
+            if (sourceText) {
+                 isPubPreprint = PREPRINT_KEYWORDS.some(keyword => sourceText.includes(keyword));
+            }
+
+            const shouldHide = excludePreprintsActive && isPubPreprint;
+
+            // Apply display style to the whole result item
+            result.style.display = shouldHide ? 'none' : '';
+
+            if (shouldHide) {
+                hiddenCount++;
+                // Optional: Log hidden title on search page
+                const titleElement = result.querySelector('.gs_rt a');
+                if (titleElement) console.log(`  - Hiding preprint (search): ${titleElement.innerText}`);
+
+            }
+        });
+    }
+
+    console.log(`Scholar Highlighter: Preprint filter processed ${processedCount} items, set ${hiddenCount} to hidden.`);
 }
 
 function reapplyCurrentMode() {
@@ -308,8 +388,9 @@ function reapplyCurrentMode() {
 
 function toggleExcludePreprints() {
     excludePreprintsActive = !excludePreprintsActive;
-    console.log(`Scholar Highlighter: Toggled Exclude Preprints to ${excludePreprintsActive}`);
-    reapplyCurrentMode(); // Re-apply the current primary mode with the new preprint setting
+    console.log("Exclude preprints toggled to:", excludePreprintsActive); // Debug log
+    // Re-run processing to apply the new filter setting
+    reapplyCurrentMode(); // Correct function to update view
 }
 
 
