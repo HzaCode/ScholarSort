@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo Generator</title>
+</head>
+<body>
+    <h2>Logo Generator</h2>
+    <canvas id="canvas128" width="128" height="128"></canvas>
+    <canvas id="canvas48" width="48" height="48"></canvas>
+    <canvas id="canvas16" width="16" height="16"></canvas>
+    
+    <script>
+        function drawLogo(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const center = size / 2;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Background circle
+            ctx.beginPath();
+            ctx.arc(center, center, center - 2, 0, 2 * Math.PI);
+            ctx.fillStyle = '#4285f4';
+            ctx.fill();
+            ctx.strokeStyle = '#1a73e8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Scholar cap
+            const capWidth = size * 0.53;
+            const capHeight = size * 0.23;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(center - capWidth/2, center - capHeight/2);
+            ctx.lineTo(center + capWidth/2, center - capHeight/2);
+            ctx.lineTo(center + capWidth/2, center - capHeight/2 + capHeight*0.2);
+            ctx.lineTo(center, center + capHeight/2);
+            ctx.lineTo(center - capWidth/2, center - capHeight/2 + capHeight*0.2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Cap band
+            ctx.fillRect(center - capWidth/2 + size*0.04, center - capHeight/2 + capHeight*0.2, capWidth - size*0.08, size*0.06);
+            
+            // Highlighter effect
+            ctx.fillStyle = '#ffeb3b';
+            ctx.globalAlpha = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(center - capWidth/2 - size*0.04, center + capHeight/2);
+            ctx.lineTo(center + capWidth/2 + size*0.04, center + capHeight/2);
+            ctx.lineTo(center + capWidth/2 + size*0.04, center + capHeight/2 + size*0.08);
+            ctx.lineTo(center, center + capHeight/2 + size*0.19);
+            ctx.lineTo(center - capWidth/2 - size*0.04, center + capHeight/2 + size*0.08);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            
+            // Impact factor badge (only for larger sizes)
+            if (size >= 48) {
+                const badgeSize = size * 0.12;
+                ctx.fillStyle = '#34a853';
+                ctx.beginPath();
+                ctx.arc(center + capWidth/2 + badgeSize, center - capHeight/2 + badgeSize, badgeSize, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${size*0.08}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('IF', center + capWidth/2 + badgeSize, center - capHeight/2 + badgeSize);
+            }
+            
+            // Magnifying glass (only for larger sizes)
+            if (size >= 48) {
+                const glassSize = size * 0.09;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = size * 0.02;
+                ctx.beginPath();
+                ctx.arc(center + capWidth/2 - glassSize, center + capHeight/2 + glassSize, glassSize, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(center + capWidth/2 - glassSize + glassSize*0.7, center + capHeight/2 + glassSize + glassSize*0.7);
+                ctx.lineTo(center + capWidth/2 - glassSize + glassSize*1.4, center + capHeight/2 + glassSize + glassSize*1.4);
+                ctx.stroke();
+            }
+        }
+        
+        // Generate logos
+        const sizes = [128, 48, 16];
+        sizes.forEach(size => {
+            const canvas = document.getElementById(`canvas${size}`);
+            drawLogo(canvas);
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = `icon${size}.png`;
+            link.href = canvas.toDataURL();
+            link.textContent = `Download ${size}x${size}`;
+            link.style.display = 'block';
+            link.style.margin = '10px';
+            document.body.appendChild(link);
+        });
+    </script>
+</body>
+</html> 

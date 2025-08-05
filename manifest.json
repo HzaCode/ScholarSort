@@ -1,40 +1,43 @@
 {
   "manifest_version": 3,
-  "name": "Scholar Profile Assistant",
-  "version": "1.0",
-  "description": "Enhance your Google Scholar experience! ",
-
+  "name": "Google Scholar Highlighter with Impact Factors",
+  "version": "1.0.0",
+  "description": "Highlight first/last author papers on Google Scholar, filter preprints, and display journal impact factors",
+  
+  "permissions": [
+    "activeTab"
+  ],
+  
   "content_scripts": [
     {
       "matches": [
-        "*://scholar.google.com/citations?*",
-        "*://scholar.google.co.uk/citations?*",
-        "*://scholar.google.de/citations?*",
-        "*://scholar.google.fr/citations?*",
-        "*://scholar.google.ca/citations?*",
-        "*://scholar.google.com.au/citations?*",
-        "*://scholar.google.nl/citations?*",
-        "*://scholar.google.es/citations?*",
-        "*://scholar.google.it/citations?*",
-        "*://scholar.google.co.jp/citations?*",
-        "*://scholar.google.com.br/citations?*",
-        "*://scholar.google.co.in/citations?*",
-        "*://scholar.google.ch/citations?*",
-        "*://scholar.google.at/citations?*",
-        "*://scholar.google.se/citations?*",
-        "*://scholar.google.dk/citations?*",
-        "*://scholar.google.no/citations?*",
-        "*://scholar.google.fi/citations?*",
-        "*://scholar.google.be/citations?*",
-        "*://scholar.google.pl/citations?*",
-        "*://scholar.google.pt/citations?*",
-        "*://scholar.google.com.hk/citations?*",
-        "*://scholar.google.com.sg/citations?*",
-        "*://scholar.google.co.kr/citations?*",
-        "*://scholar.google.co.il/citations?*"
+        "*://scholar.google.com/*",
+        "*://scholar.google.cn/*"
       ],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_end"
     }
-  ]
+  ],
+  
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "journal_data_top1000.js",
+        "journal_data_full.js",
+        "journal_data_top5000.js", 
+        "journal_data_top500.js",
+        "logo.jpg"
+      ],
+      "matches": [
+        "*://scholar.google.com/*",
+        "*://scholar.google.cn/*"
+      ]
+    }
+  ],
+  
+  "icons": {
+    "16": "logo.jpg",
+    "48": "logo.jpg", 
+    "128": "logo.jpg"
+  }
 }
