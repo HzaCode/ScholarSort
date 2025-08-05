@@ -26,8 +26,8 @@
 Requires Google Chrome browser. Install as an unpacked extension:
 
 ```bash
-git clone https://github.com/yourusername/scholarsort.git
-cd scholarsort
+git clone https://github.com/HzaCode/ScholarSort.git
+cd ScholarSort
 ```
 
 Load in Chrome:
@@ -144,7 +144,7 @@ We welcome contributions! Please feel free to submit issues or pull requests.
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/scholarsort.git
+git clone https://github.com/HzaCode/ScholarSort.git
 
 # Make your changes
 # Test in Chrome Developer mode

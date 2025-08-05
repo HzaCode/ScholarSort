@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Google Scholar Highlighter with Impact Factors",
+  "name": "ScholarSort",
   "version": "1.0.0",
-  "description": "Highlight first/last author papers on Google Scholar, filter preprints, and display journal impact factors",
+  "description": "A Chrome extension designed to enhance Google Scholar with advanced filtering capabilities and journal impact factor display",
   
   "permissions": [
     "activeTab"
