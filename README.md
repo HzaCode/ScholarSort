@@ -8,6 +8,12 @@
     <a href="manifest.json"><img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"></a>
     <a href="journal_data_full.js"><img src="https://img.shields.io/badge/journals-25,852-orange.svg" alt="Impact Factors"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+    <img src="https://img.shields.io/badge/Built_with-JavaScript-yellow.svg" alt="Built with JavaScript">
+<img src="https://img.shields.io/badge/Manifest-V3-informational.svg" alt="Manifest V3">
+<a href="https://github.com/HzaCode/ScholarSort/graphs/contributors">
+ 
+</a>
+
   </p>
   
   <p><strong>ScholarSort</strong> is a Chrome extension designed to enhance Google Scholar with advanced filtering capabilities and journal impact factor display.</p>
