@@ -17,7 +17,7 @@
     <a href="#quickstart">Quickstart</a> •
     <a href="#features">Features</a> •
     <a href="#data-sources">Data Sources</a> •
-    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#technical-details">Tech Details</a>
   </p>
 </div>
 
@@ -124,18 +124,6 @@ To use a smaller database, edit line 7 in `content.js`:
 - Smart caching system
 - Non-blocking UI updates
 - Minimal resource usage
-
-## Troubleshooting
-
-### Impact Factors Not Showing
-1. Check browser console for errors (F12)
-2. Ensure journal data file is loaded
-3. Refresh page and click "Show Impact Factors" again
-
-### Extension Not Working
-1. Verify you're on scholar.google.com
-2. Check extension is enabled in chrome://extensions/
-3. Look for console error messages
 
 ## Contributing
 
